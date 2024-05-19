@@ -1,5 +1,5 @@
 [project]
-name = "upic"
+name = "upicvision"
 version = "0.1.0"
 description = "pi vision lib"
 authors = [
