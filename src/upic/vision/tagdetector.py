@@ -9,7 +9,7 @@ from typing import List, Literal, Self, Any, Callable, Optional
 
 import cv2
 import numpy as np
-from cv2 import Mat, cvtColor, COLOR_RGB2GRAY,VideoCapture
+from cv2 import Mat, cvtColor, COLOR_RGB2GRAY, VideoCapture
 from numpy import ndarray, dtype, generic
 from numpy.linalg import linalg
 from pyapriltags import Detector, Detection
@@ -46,8 +46,10 @@ class TagDetector:
             cam_id:
             resolution_multiplier:
         """
-        self._camera: VideoCapture = VideoCapture(cam_id) if cam_id is not None else None
-        self.set_cam_resolution_mul(resolution_multiplier or self.Config.resolution_multiplier)
+        self._frame_center: ndarray = np.array([0, 0])
+        self._camera: VideoCapture | None = VideoCapture(cam_id) if cam_id is not None else None
+        self.set_cam_resolution_mul(
+            resolution_multiplier or self.Config.resolution_multiplier) if self._camera else None
 
         self._tag_id: int = TagDetector.Config.default_tag_id
 
@@ -87,10 +89,16 @@ class TagDetector:
         Returns:
             Self: Returns the calling object itself, supporting chaining calls.
         """
-        self._camera.release()  # Release the camera resource
+        if self._camera:
+            _logger.info("Releasing camera...")
+            self._camera.release()  # Release the camera resource
+            self._camera = None
+            _logger.info("Camera released!")
+        else:
+            _logger.warning("There is no camera need to release!")
         return self  # Support chaining calls
 
-    def apriltag_detect_start(self):
+    def apriltag_detect_start(self)->Self:
         """
         Initializes the apriltag detection process. This function runs in a separate thread,
         continuously detecting apriltags from the camera feed and processes them according to the configured method.
@@ -100,6 +108,9 @@ class TagDetector:
         If tags are found, the function updates the internal tag ID based on the selected method.
         """
 
+        if self._camera is None:
+            raise ValueError("Camera is not initialized! Use open_camera() first!")
+
         # Set the tag detection function
         detector_function = TagDetector.detector.detect
 
@@ -108,6 +119,7 @@ class TagDetector:
         frame_center: ndarray = self._frame_center
         check_interval = self.Config.halt_check_interval
 
+        _logger.info(f'Tag detecting mode: {self.Config.ordering_method}')
         # Choose the tag handling method based on the configuration
         match self.Config.ordering_method:
             case "nearest":
@@ -123,38 +135,43 @@ class TagDetector:
                 raise ValueError(f"Wrong ordering method! Got {self.Config.ordering_method}")
 
         def __loop():
+
             # Main detection loop
             while self._continue_detection:
-                # Check if detection should be halted
-                if self._halt_detection:
-                    _logger.debug("Apriltag detect halted!")
-                    sleep(check_interval)
-                    continue
-                # Read a frame from the camera
-                success, frame = cam.read()
-                if success:
-                    # Convert the frame to grayscale and detect tags
-                    gray: Mat | ndarray[Any, dtype[generic]] | ndarray = cvtColor(frame, COLOR_RGB2GRAY)
-                    tags: list[Detection] = detector_function(gray, self.Config.single_tag_mode)
-                    if tags:
-                        # Update the tag ID using the selected method
-                        self._tag_id = used_method(tags)
-                else:
-                    # If the camera read fails, log a critical error and set the error tag ID
-                    self._tag_id = TagDetector.Config.error_tag_id
-                    _logger.critical("Camera not functional!")
-                    return
+                try:
+                    # Check if detection should be halted
+                    if self._halt_detection:
+                        _logger.debug("Apriltag detect halted!")
+                        sleep(check_interval)
+                        continue
+                    # Read a frame from the camera
+                    success, frame = cam.read()
+                    if success:
+                        # Convert the frame to grayscale and detect tags
+                        gray: Mat | ndarray[Any, dtype[generic]] | ndarray = cvtColor(frame, COLOR_RGB2GRAY)
+                        tags: list[Detection] = detector_function(gray)
+                        if tags:
+                            # Update the tag ID using the selected method
+                            self._tag_id = used_method(tags)
+                    else:
+                        # If the camera read fails, log a critical error and set the error tag ID
+                        self._tag_id = TagDetector.Config.error_tag_id
+                        _logger.critical("Camera not functional!")
+                        return
+                except Exception as e:
+                    _logger.exception(e)
             # Log when the detection loop stops
             _logger.info("AprilTag detect stopped")
 
+        self._continue_detection = True
         # Create and start the detection thread
-        apriltag_detect = Thread(target=__loop, name="apriltag_detect_Process")
-        apriltag_detect.daemon = True
+        apriltag_detect = Thread(target=__loop, name="apriltag_detect_Process", daemon=True)
         apriltag_detect.start()
         # Log when the detection is activated
         _logger.info("AprilTag detect Activated")
+        return self
 
-    def apriltag_detect_stop(self) -> Self:
+    def apriltag_detect_end(self) -> Self:
         """
         Stops the AprilTag detection process by setting `_continue_detection` to False and resetting `_tag_id` to the default value.
 
@@ -199,8 +216,8 @@ class TagDetector:
         )
 
     def set_cam_resolution_mul(
-        self,
-        resolution_multiplier: float,
+            self,
+            resolution_multiplier: float,
     ) -> Self:
         """
         Set the camera resolution by multiplying the current resolution with the given resolution multiplier.
@@ -211,6 +228,8 @@ class TagDetector:
         Returns:
             Self: The updated instance of the class with the new camera resolution.
         """
+        if self._camera is None:
+            raise ValueError("Camera is not initialized!")
         return self.set_cam_resolution(
             self._camera.get(cv2.CAP_PROP_FRAME_WIDTH) * resolution_multiplier,
             self._camera.get(cv2.CAP_PROP_FRAME_HEIGHT) * resolution_multiplier,
@@ -227,13 +246,18 @@ class TagDetector:
         Returns:
             Self: The updated instance of the class.
         """
+        if self._camera is None:
+            raise ValueError("Camera is not initialized!")
         self._camera.set(cv2.CAP_PROP_FRAME_WIDTH, new_width)
         self._camera.set(cv2.CAP_PROP_FRAME_HEIGHT, new_height)
+        _logger.info(
+            f"Set CAMERA RESOLUTION: {self._camera.get(cv2.CAP_PROP_FRAME_WIDTH)}x{self._camera.get(cv2.CAP_PROP_FRAME_HEIGHT)}"
+        )
         self._update_cam_center()
         return self
 
     @property
-    def camera_device(self) -> cv2.VideoCapture:
+    def camera_device(self) -> cv2.VideoCapture | None:
         """
         the device instance
         Returns:
