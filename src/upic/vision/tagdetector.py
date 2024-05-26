@@ -9,7 +9,7 @@ from typing import List, Literal, Self, Any, Callable, Optional
 
 import cv2
 import numpy as np
-from cv2 import Mat, cvtColor, COLOR_RGB2GRAY
+from cv2 import Mat, cvtColor, COLOR_RGB2GRAY,VideoCapture
 from numpy import ndarray, dtype, generic
 from numpy.linalg import linalg
 from pyapriltags import Detector, Detection
@@ -39,14 +39,14 @@ class TagDetector:
         default_tag_id: int = -1
         error_tag_id: int = -10
 
-    def __init__(self, cam_id: int = 0, resolution_multiplier: Optional[float] = None):
+    def __init__(self, cam_id: Optional[int] = None, resolution_multiplier: Optional[float] = None):
         """
 
         Args:
             cam_id:
             resolution_multiplier:
         """
-        self._camera: cv2.VideoCapture = cv2.VideoCapture(cam_id)
+        self._camera: VideoCapture = VideoCapture(cam_id) if cam_id is not None else None
         self.set_cam_resolution_mul(resolution_multiplier or self.Config.resolution_multiplier)
 
         self._tag_id: int = TagDetector.Config.default_tag_id
@@ -63,6 +63,8 @@ class TagDetector:
         Returns:
 
         """
+        if self._camera is not None:
+            self.release_camera()
         self._camera = cv2.VideoCapture(device_id)
         read_status, _ = self._camera.read()
         if read_status:
