@@ -68,8 +68,7 @@ class TagDetector:
         if self._camera is not None:
             self.release_camera()
         self._camera = cv2.VideoCapture(device_id)
-        read_status, _ = self._camera.read()
-        if read_status:
+        if self._camera.isOpened():
             self._update_cam_center()
             _logger.info(
                 f"CAMERA RESOLUTION：{self._camera.get(cv2.CAP_PROP_FRAME_WIDTH)}x{self._camera.get(cv2.CAP_PROP_FRAME_HEIGHT)}\n"
