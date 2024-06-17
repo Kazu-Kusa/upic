@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:f5c9af6263dad095e869adc655ca50a09cb9e7e6f7b48b11a0be903bcae533b9"
+content_hash = "sha256:e7d29e64a65ebb182a185be3e566e4718c9a43cbc97f00ae9f6874a9654dabd7"
 
 [[package]]
 name = "coloredlogs"

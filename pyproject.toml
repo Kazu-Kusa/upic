@@ -1,13 +1,13 @@
 [project]
 name = "upicvision"
-version = "0.1.0.3"
+version = "0.1.0.4"
 description = "pi vision lib"
 authors = [
     {name = "Whth", email = "88489697+Whth@users.noreply.github.com"},
 ]
 dependencies = [
     "coloredlogs>=15.0.1",
-    "numpy>=1.26.4",
+    "numpy==1.26.4",
     "opencv-python-headless>=4.9.0.80",
     "pyapriltags>=3.3.0.3",
 ]
