@@ -45,5 +45,5 @@ jobs:
       - name: try to import package
         run: |
           eval $(pdm venv activate)
-          python -c "import mentabotix"
+          python -c "import upic"
         shell: bash
