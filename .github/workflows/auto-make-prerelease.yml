@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - main
     paths:
       - 'pyproject.toml' # 当pyproject.toml文件变动时触发
 
