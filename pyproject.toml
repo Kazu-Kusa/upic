@@ -1,6 +1,6 @@
 [project]
 name = "upicvision"
-version = "0.1.0.4"
+version = "0.1.0.5"
 description = "pi vision lib"
 authors = [
     {name = "Whth", email = "88489697+Whth@users.noreply.github.com"},
