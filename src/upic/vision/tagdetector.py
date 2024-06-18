@@ -97,7 +97,7 @@ class TagDetector:
             _logger.warning("There is no camera need to release!")
         return self  # Support chaining calls
 
-    def apriltag_detect_start(self)->Self:
+    def apriltag_detect_start(self) -> Self:
         """
         Initializes the apriltag detection process. This function runs in a separate thread,
         continuously detecting apriltags from the camera feed and processes them according to the configured method.
@@ -133,11 +133,14 @@ class TagDetector:
                 # Raise an error if the configuration method is invalid
                 raise ValueError(f"Wrong ordering method! Got {self.Config.ordering_method}")
 
+        default_tag_id = TagDetector.Config.default_tag_id
+        error_tag_id = TagDetector.Config.error_tag_id
+
         def __loop():
 
-            # Main detection loop
-            while self._continue_detection:
-                try:
+            try:
+                # Main detection loop
+                while self._continue_detection:
                     # Check if detection should be halted
                     if self._halt_detection:
                         _logger.debug("Apriltag detect halted!")
@@ -148,17 +151,20 @@ class TagDetector:
                     if success:
                         # Convert the frame to grayscale and detect tags
                         gray: Mat | ndarray[Any, dtype[generic]] | ndarray = cvtColor(frame, COLOR_RGB2GRAY)
-                        tags: list[Detection] = detector_function(gray)
+                        tags: List[Detection] = detector_function(gray)
                         if tags:
                             # Update the tag ID using the selected method
                             self._tag_id = used_method(tags)
+                        else:
+                            # If no tags are detected, set the tag ID to the error tag ID
+                            self._tag_id = default_tag_id
                     else:
                         # If the camera read fails, log a critical error and set the error tag ID
-                        self._tag_id = TagDetector.Config.error_tag_id
+                        self._tag_id = error_tag_id
                         _logger.critical("Camera not functional!")
-                        return
-                except Exception as e:
-                    _logger.exception(e)
+                        break
+            except Exception as e:
+                _logger.exception(e)
             # Log when the detection loop stops
             _logger.info("AprilTag detect stopped")
 
