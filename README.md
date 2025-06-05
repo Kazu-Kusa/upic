@@ -1,67 +1,77 @@
-# upic
-# TagDetector Class Documentation
+# 🏷️ upicvision
 
-## Overview
-The `TagDetector` class is designed for real-time detection of AprilTags using a camera feed. It leverages OpenCV and the AprilTag library to identify and track specific tags within the camera's field of view. This class encapsulates functionalities such as camera initialization, AprilTag detection setup, resolution adjustment, and control over the detection process, including start, stop, pause, and resume operations.
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python Versions](https://img.shields.io/pypi/pyversions/upicvision)](https://pypi.org/project/upicvision/)
+[![PyPI Version](https://img.shields.io/pypi/v/upicvision)](https://pypi.org/project/upicvision/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Kazu-Kusa/upicvision)
+[![PyPI Downloads](https://static.pepy.tech/badge/upicvision/week)](https://pepy.tech/projects/upicvision)
+[![PyPI Downloads](https://static.pepy.tech/badge/upicvision)](https://pepy.tech/projects/upicvision)
 
-## Key Features
-- **AprilTag Detection**: Utilizes the `Detector` from the AprilTag library with customizable settings for tag family, processing threads, decimation, edge refinement, and debug mode.
-- **Configuration Flexibility**: Offers a nested `Config` class to centralize and manage default configurations like operation mode (single tag vs. multiple), resolution scaling, tag ordering strategy, interval for halting checks, and default/error tag IDs.
-- **Camera Management**: Provides methods to open, release, and adjust the camera resolution dynamically, ensuring efficient resource handling and适应性to different hardware capabilities and requirements.
-- **Detection Loop**: Implements a threaded detection loop that can be controlled externally to start, halt, and resume tag detection without interrupting the main application flow. This design enables non-blocking operation and responsiveness in applications where real-time feedback is crucial.
-- **Tag Ordering Strategies**: Supports two ordering methods for handling multiple detections: "nearest" (prioritizes the closest tag to the frame center) and "single" (uses the first detected tag), enhancing flexibility based on application needs.
-- **Error Handling**: Includes exception handling within the detection loop to gracefully manage camera failures or unexpected errors during tag processing.
-- **Property Access**: Exposes properties for querying the current detected tag ID and accessing the underlying camera device instance.
+---
 
-## Usage Example
+## 📸 Overview
 
-### Initialization
+The `TagDetector` class is a powerful 🚀 real-time AprilTag detection system that transforms your camera into a smart tag recognition device! 
+
+🎯 **Key Features:**
+- 📷 **Real-time Detection**: Lightning-fast AprilTag identification using OpenCV and AprilTag libraries
+- 🎮 **Easy Control**: Simple start, stop, pause, and resume operations
+- ⚙️ **Flexible Configuration**: Customizable camera settings and resolution scaling
+- 🔧 **Resource Management**: Smart camera initialization and cleanup
+- 🎪 **Thread-Safe**: Built-in threading support for smooth performance
+
+Perfect for robotics 🤖, augmented reality 🥽, and computer vision applications! 
+
+## 🚀 Quick Start Guide
+
+### 🔧 Initialization
 ```python
-from upic import TagDetector  # Assuming TagDetector is defined in 'your_module'
+from upic import TagDetector
 
-# Initialize with optional camera ID and custom resolution multiplier
+# 🎬 Create your detector with custom settings
 detector = TagDetector(cam_id=0, resolution_multiplier=0.75)
 ```
 
-### Camera Operations
+### 📹 Camera Operations
 ```python
-# Open camera and start detection
+# 🟢 Start the magic - open camera and begin detection
 detector.open_camera().apriltag_detect_start()
 
-# At any point, you can halt detection without releasing the camera
+# ⏸️ Pause detection temporarily (camera stays active)
 detector.halt_detection()
 
-# To resume detection after halting
+# ▶️ Resume detection when ready
 detector.resume_detection()
 
-# When done, release camera resources
+# 🔴 Clean shutdown - release camera resources
 detector.release_camera()
 ```
 
-### Retrieving Detected Tag ID
+### 🏷️ Getting the Detected Tag
 ```python
+# 🔍 Check what tag is currently detected
 current_tag_id = detector.tag_id
-print(f"Current Tag ID: {current_tag_id}")
+print(f"🎯 Current Tag ID: {current_tag_id}")
 ```
 
-### Complete code
+### 💡 Complete Working Example
 ```python
-from upic import TagDetector  # Assuming TagDetector is defined in 'your_module'
+from upic import TagDetector
 
-# Initialize with optional camera ID and custom resolution multiplier
+# 🚀 Initialize the detector
 detector = TagDetector(cam_id=0, resolution_multiplier=0.75)
-# Open camera and start detection
+
+# 🎬 Start detection
 detector.open_camera().apriltag_detect_start()
 
-# At any point, you can halt detection without releasing the camera
-detector.halt_detection()
+# 🎮 Control detection as needed
+detector.halt_detection()  # ⏸️ Pause
+detector.resume_detection()  # ▶️ Resume
 
-# To resume detection after halting
-detector.resume_detection()
-
-# When done, release camera resources
-detector.release_camera()
-
+# 🔍 Get the detected tag
 current_tag_id = detector.tag_id
-print(f"Current Tag ID: {current_tag_id}")
+print(f"🎯 Detected Tag ID: {current_tag_id}")
+
+# 🧹 Clean up when finished
+detector.release_camera()
 ```
