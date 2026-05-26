@@ -31,7 +31,7 @@ import cv2
 import numpy as np
 from cv2 import Mat, cvtColor, COLOR_RGB2GRAY, VideoCapture
 from numpy import ndarray, dtype, generic
-from numpy.linalg import linalg
+import numpy.linalg as linalg
 from pyapriltags import Detector, Detection
 
 from ..modules.logger import _logger
